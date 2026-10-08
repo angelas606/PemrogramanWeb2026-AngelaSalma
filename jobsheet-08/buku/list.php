@@ -6,7 +6,31 @@ require __DIR__ . '/../includes/koneksi.php';
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 
-$daftarBuku = $pdo->query("SELECT * FROM buku ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+$keyword = isset($_GET['keyword']) && is_string($_GET['keyword'])
+    ? trim($_GET['keyword'])
+    : '';
+if ($keyword !== '') {
+    $sql = "
+        SELECT *
+        FROM buku
+        WHERE judul ILIKE :keyword
+        ORDER BY id DESC
+    ";
+
+    $stmt = $pdo->prepare($sql);
+
+    $stmt->execute([
+        'keyword' => '%' . $keyword . '%'
+    ]);
+
+    $daftarBuku = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $daftarBuku = $pdo->query("
+        SELECT *
+        FROM buku
+        ORDER BY id DESC
+    ")->fetchAll(PDO::FETCH_ASSOC);
+}
 ?>
         <section>
             <h2>Daftar Buku</h2>
@@ -16,8 +40,17 @@ $daftarBuku = $pdo->query("SELECT * FROM buku ORDER BY id DESC")->fetchAll(PDO::
             <?php endif; ?>
 
             <div class="search-box">
-                <label for="search-input">Cari Judul Buku</label>
-                <input type="text" id="search-input" placeholder="Ketik judul buku...">
+                <form method="get">
+                    <label for="keyword-search">Cari Judul Buku</label>
+                    <input
+                        type="text"
+                        id="keyword-search"
+                        name="keyword"
+                        placeholder="Ketik judul buku..."
+                        value="<?= htmlspecialchars($keyword, ENT_QUOTES, 'UTF-8') ?>"
+                    >
+                    <button type="submit">Cari</button>
+                </form>
             </div>
 
             <div class="table-responsive">
@@ -28,6 +61,7 @@ $daftarBuku = $pdo->query("SELECT * FROM buku ORDER BY id DESC")->fetchAll(PDO::
                         <th>Pengarang</th>
                         <th>Tahun</th>
                         <th>Stok</th>
+                        <th>Tanggal Ditambahkan</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -43,6 +77,7 @@ $daftarBuku = $pdo->query("SELECT * FROM buku ORDER BY id DESC")->fetchAll(PDO::
                             <td><?php echo $buku['pengarang']; ?></td>
                             <td><?php echo $buku['tahun']; ?></td>
                             <td><?php echo $buku['stok']; ?></td>
+                            <td><?php echo date('d-m-Y h:i', strtotime($buku['tanggal_ditambahkan']));?></td>
                             <td>
                                 <button type="button">Edit</button>
                                 <button type="button" class="btn-hapus">Hapus</button>

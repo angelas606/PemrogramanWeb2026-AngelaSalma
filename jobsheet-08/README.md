@@ -21,6 +21,14 @@ Sub-CPMK: Menghubungkan aplikasi dengan basis data PostgreSQL.
    ```
 4. Sesuaikan kredensial di `includes/koneksi.php` (`$user`, `$pass`) dengan environment lokal.
 
+## Migrasi data buku dari Jobsheet 6
+Skrip berikut membaca `jobsheet-06/data/buku.json` dan memasukkan seluruh buku ke tabel PostgreSQL `buku` menggunakan prepared statement:
+```bash
+php scripts/import_buku_json.php
+```
+
+Jalankan skrip ini setelah menyiapkan database. Skrip melewati buku yang sudah ada dengan judul dan pengarang yang sama, sehingga dapat dijalankan ulang tanpa menggandakan data tersebut. Migrasi dibungkus dalam transaksi sehingga seluruh INSERT dibatalkan jika salah satunya gagal. Skrip hanya dapat dijalankan lewat PHP CLI, bukan browser.
+
 ## Cara menjalankan
 **Opsi 1 — PHP built-in server**:
 ```bash
